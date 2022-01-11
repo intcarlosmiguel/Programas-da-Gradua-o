@@ -1,10 +1,5 @@
-# Programas da Graduação
-Olá, sou Carlos Miguel formado em Física Bacharelado pela Universidade Federal do Ceará, com foco em Estatística no ramo dos Sistemas Complexos.
-Nesse repositório irei colocar algoritmos que forma úteis para mim em toda a minha graduação e uma breve explicação de cada um deles e de sua referência. A grande maioria deles foram construídos na linguagem C por sua velocidade. Todos esses Algoritmos são parte do estudo de Teoria de Redes. Para saber mais alguns links:
+# Breadth-First Search
+Quando se trata de uma rede regular é bastante simples encontrar quantos passos podem se chegar de um ponto A até B, contudo para redes mais complexas isso não pode ser tão simples. Para resolver esse problema existe o algoritmo de Breadth-First Search (BFS) na qual escolhemos um sítio *A* da nossa rede como raiz do algoritmo, cada vizinho de *A* tem distância 1, agora vamos para os vizinho dos vizinhos de *A* e cada um deles têm distância 2 da raiz e assim por diante. Se existir um sítio *B* que tenha distância 5 a partir de um caminho e 6 de outro (isso é possível se a rede for muito complexa) selecionamos o menor caminho até *B*.
 
-1. Wikipedia:
-- https://pt.wikipedia.org/wiki/Teoria_das_redes_complexas
-2. Network Science - Barabasi:
-- http://networksciencebook.com
-3. Dinâmica de opiniões extremas em redes com substrato espacial (TCC)
-- https://repositorio.ufc.br/handle/riufc/60433
+Referências:
+1. https://pt.wikipedia.org/wiki/Busca_em_largura

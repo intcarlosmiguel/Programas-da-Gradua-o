@@ -1,10 +1,6 @@
-# Programas da Graduação
-Olá, sou Carlos Miguel formado em Física Bacharelado pela Universidade Federal do Ceará, com foco em Estatística no ramo dos Sistemas Complexos.
-Nesse repositório irei colocar algoritmos que forma úteis para mim em toda a minha graduação e uma breve explicação de cada um deles e de sua referência. A grande maioria deles foram construídos na linguagem C por sua velocidade. Todos esses Algoritmos são parte do estudo de Teoria de Redes. Para saber mais alguns links:
+# Rede de Kleinberg
 
-1. Wikipedia:
-- https://pt.wikipedia.org/wiki/Teoria_das_redes_complexas
-2. Network Science - Barabasi:
-- http://networksciencebook.com
-3. Dinâmica de opiniões extremas em redes com substrato espacial (TCC)
-- https://repositorio.ufc.br/handle/riufc/60433
+O estudo de como estamos extremamente conectados é bastante estudado pela comunidade científica. O fenômeno de "pequeno mundo" é algo que teve seu pontapé inicial com o chamado experimento de Milgram. Logo depois vieram vários modelos tentando explicar os resultados de Milgram e o que melhor se saiu nessa tarefa foi o de Kleinberg. Em uma rede quadrada inserimos uma ligação de longo alcance que tem uma probabilidade que segue uma distribuição em lei de potência com um parâmetro de controle *α*.
+
+## Referências
+1. Kleinberg, J. Navigation in a small world. Nature 406, 845 (2000). https://doi.org/10.1038/35022643
