@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "mtwister.h"
 int L; // Largura da rede
 int N; // Número de sítios
@@ -9,8 +10,8 @@ int px,py; // Número de sítios ocupados quando percola em X e em Y
 int* ptr; // Vetor que salva, sítios ocupados ou não ocupados, se são raízes ou não
 int* order; // Vetor que guarda a ordem que os sítios vão ser ocupados
 int* directional; // Vetor que aponta para qual sítio, o sítio i está ligado
-int* Xroot; // Distância em X de um sítio i para a sua raiz 
-int* Yroot; // Distância em Y de um sítio i para a sua raiz 
+int* Xroot; // Distância em X de um sítio i para a sua raiz
+int* Yroot; // Distância em Y de um sítio i para a sua raiz
 int X(int i){
     return i%L; // Retorna a coordenada x do sítio i
 }
@@ -165,42 +166,80 @@ void permutation(int seed){// Essa função aleatoriza o vetor order
         order[j] = u;
     }
 }
-void neighbors(){// Aqui começamos a ocupar os sítios
-    int i,j;
+void neighbors(double* resultados,double* maior_cluster){// Aqui começamos a ocupar os sítios
+    int i,j,site;
+    FILE* critical_point;
     for(i=0;i<N;i++) ptr[i] = EMPTY; // Inicialmente todos estão desocupados
     for(i=0;i<N;i++){
-        int site = order[i]; //Selecionamos um sitio aleatório
+        site = order[i]; //Selecionamos um sitio aleatório
         //printf("site = %d\n",site);
         ptr[site] = -1;// Ocupamos ele
         directional[site] = site; // Ele aponta para ele mesmo
         Xroot[site] = 0;
         Yroot[site] = 0;
         n_clusters++;
-        for(j=1;j<5;j++) if(ptr[vizinho(site,j)]!=EMPTY) link(vizinho(site,j),site,i,j);
+        for(j = 1; j < 5; j++) if(ptr[vizinho(site,j)]!=EMPTY) link(vizinho(site,j),site,i,j);
+        resultados[i] += (double)cluster/(i+1);
         if((px!=EMPTY)&&(py!=EMPTY)) break;
     }
+    char filename[800];
+    sprintf(filename, "./output/critical_%d.txt", L);
+    critical_point = fopen(filename,"a");
     //printf("%d,%d\n",cluster,n_clusters);
-    if(px>py) printf("%d\t%d\t%d\n",px,py,px);
-    else printf("%d\t%d\t%d\n",px,py,py);
+    if(px>py) fprintf(critical_point,"%d\t%d\t%d\n",px,py,px);
+    else fprintf(critical_point,"%d\t%d\t%d\n",px,py,py);
+    FILE* file_clusters;
+    FILE* bigcluster;
+    sprintf(filename, "./output/clusters_%d.txt", L);
+    file_clusters = fopen(filename,"a");
+
+    for ( i = 0; i < N; i++) if((ptr[i] != EMPTY) && (ptr[i] < 0)) fprintf(file_clusters,"%d\n",-ptr[i]);
+    fclose(file_clusters);
+    *maior_cluster += cluster;
 }
 int main(int argc,char *argv[ ]){ // Começa Aqui
+
     int seed = atoi(argv[1]); // Definindo valor da Seed
+
     L = atoi(argv[2]); // Definindo o valor do Tamanho da rede
+    int redes = atoi(argv[3]); // Definindo o valor do Tamanho da rede
+
     N = L*L; // Definindo o valor do Número de Sítios
     EMPTY = -(N+1); // Definindo o valor do Número de Vazio
-    ptr = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
-    order = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
-    directional = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
-    Xroot = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
-    Yroot = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
-    px = py = EMPTY;// Definindo que por hora, px e py são vazios
-    begin();
-   	permutation(seed);
-    neighbors();
-    px = py = EMPTY;
-    free(ptr);// Liberação de memória
-    free(order);// Liberação de memória
-    free(directional);// Liberação de memória
-    free(Xroot);// Liberação de memória
-    free(Yroot);// Liberação de memória
+    int i;
+    double* resultados = malloc(N*sizeof(double));
+    double maior_cluster = 0;
+    for ( i = 0; i < redes; i++){
+        ptr = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
+        order = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
+        directional = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
+        Xroot = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
+        Yroot = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
+
+        px = py = EMPTY;// Definindo que por hora, px e py são vazios
+        begin();
+        permutation(seed);
+        neighbors(resultados,&maior_cluster);
+        px = py = EMPTY;
+        free(ptr);// Liberação de memória
+        free(order);// Liberação de memória
+        free(directional);// Liberação de memória
+        free(Xroot);// Liberação de memória
+        free(Yroot);// Liberação de memória
+        seed++;
+        n_clusters = 0,cluster = 0;
+        if((i+1)%1000 == 0)printf("Rodou: %d\n",i+1);
+    }
+    FILE* file; 
+    char filename[800];
+    sprintf(filename, "./output/prob_%d.txt", L);
+    file = fopen(filename,"a");
+    for ( i = 0; i < N; i++) if(resultados[i] > 0)fprintf(file,"%f\n",resultados[i]/redes);
+    fclose(file);
+    free(resultados);
+
+    sprintf(filename, "./output/big_cluster.txt");
+    file = fopen(filename,"a");
+    fprintf(file,"%d %f\n",L,maior_cluster/redes);
+    fclose(file);
 }
