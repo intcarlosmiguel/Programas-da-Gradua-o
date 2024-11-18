@@ -1,7 +1,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "mtwister.h"
+#include <stdbool.h>
+void verificarOuCriarPasta(const char *caminho) {
+    struct stat st;
+
+    // Verifica se a pasta existe
+    if (stat(caminho, &st) == 0 && S_ISDIR(st.st_mode)) {
+        printf("A pasta '%s' já existe.\n", caminho);
+    } else {
+        // Tenta criar a pasta
+        if (mkdir(caminho, 0755) == 0) {
+            printf("A pasta '%s' foi criada com sucesso.\n", caminho);
+        } else {
+            perror("Erro ao criar a pasta");
+        }
+    }
+}
+
 int L; // Largura da rede
 int N; // Número de sítios
 int EMPTY; // Número que representa sítios vazios
@@ -168,11 +187,11 @@ void permutation(int seed){// Essa função aleatoriza o vetor order
 }
 void neighbors(double* resultados,double* maior_cluster){// Aqui começamos a ocupar os sítios
     int i,j,site;
-    FILE* critical_point;
+    bool is_critical = false;
+    
     for(i=0;i<N;i++) ptr[i] = EMPTY; // Inicialmente todos estão desocupados
     for(i=0;i<N;i++){
         site = order[i]; //Selecionamos um sitio aleatório
-        //printf("site = %d\n",site);
         ptr[site] = -1;// Ocupamos ele
         directional[site] = site; // Ele aponta para ele mesmo
         Xroot[site] = 0;
@@ -180,24 +199,32 @@ void neighbors(double* resultados,double* maior_cluster){// Aqui começamos a oc
         n_clusters++;
         for(j = 1; j < 5; j++) if(ptr[vizinho(site,j)]!=EMPTY) link(vizinho(site,j),site,i,j);
         resultados[i] += (double)cluster/(i+1);
-        if((px!=EMPTY)&&(py!=EMPTY)) break;
-    }
-    char filename[800];
-    sprintf(filename, "./output/critical_%d.txt", L);
-    critical_point = fopen(filename,"a");
-    //printf("%d,%d\n",cluster,n_clusters);
-    if(px>py) fprintf(critical_point,"%d\t%d\t%d\n",px,py,px);
-    else fprintf(critical_point,"%d\t%d\t%d\n",px,py,py);
-    FILE* file_clusters;
-    FILE* bigcluster;
-    sprintf(filename, "./output/clusters_%d.txt", L);
-    file_clusters = fopen(filename,"a");
+        printf("%d/%d %d\n",cluster,N,i);
+        if((px!=EMPTY)&&(py!=EMPTY) && (!is_critical)){
+            is_critical = true;
+            FILE* critical_point;
+            char filename[800];
+            sprintf(filename, "./output/critical_%d.txt", L);
+            critical_point = fopen(filename,"a");
+            
+            if(px>py) fprintf(critical_point,"%d\t%d\t%d\n",px,py,px);
+            else fprintf(critical_point,"%d\t%d\t%d\n",px,py,py);
 
-    for ( i = 0; i < N; i++) if((ptr[i] != EMPTY) && (ptr[i] < 0)) fprintf(file_clusters,"%d\n",-ptr[i]);
-    fclose(file_clusters);
-    *maior_cluster += cluster;
+            FILE* file_clusters;
+            sprintf(filename, "./output/clusters_%d.txt", L);
+            file_clusters = fopen(filename,"a");
+
+            for ( j = 0; j < N; j++) if((ptr[j] != EMPTY) && (ptr[j] < 0)) fprintf(file_clusters,"%d\n",-ptr[j]);
+            fclose(file_clusters);
+            fclose(critical_point);
+            *maior_cluster += cluster;
+            //printf("Finalizou!\n");
+        }
+    }
 }
 int main(int argc,char *argv[ ]){ // Começa Aqui
+    const char *caminho = "output";
+    verificarOuCriarPasta(caminho);
 
     int seed = atoi(argv[1]); // Definindo valor da Seed
 
@@ -210,6 +237,7 @@ int main(int argc,char *argv[ ]){ // Começa Aqui
     double* resultados = malloc(N*sizeof(double));
     double maior_cluster = 0;
     for ( i = 0; i < redes; i++){
+        
         ptr = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
         order = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
         directional = (int*)malloc(N*sizeof(int));// Definindo o tamanho do vetor
@@ -230,16 +258,20 @@ int main(int argc,char *argv[ ]){ // Começa Aqui
         n_clusters = 0,cluster = 0;
         if((i+1)%1000 == 0)printf("Rodou: %d\n",i+1);
     }
-    FILE* file; 
-    char filename[800];
-    sprintf(filename, "./output/prob_%d.txt", L);
-    file = fopen(filename,"a");
-    for ( i = 0; i < N; i++) if(resultados[i] > 0)fprintf(file,"%f\n",resultados[i]/redes);
-    fclose(file);
-    free(resultados);
+    if(redes > 1){
+        FILE* file; 
+        char filename[800];
+        sprintf(filename, "./output/prob_%d.txt", L);
+        file = fopen(filename,"a");
+        for ( i = 0; i < N; i++) if(resultados[i] > 0)fprintf(file,"%f\n",resultados[i]/redes);
+        fclose(file);
+        free(resultados);
 
-    sprintf(filename, "./output/big_cluster.txt");
-    file = fopen(filename,"a");
-    fprintf(file,"%d %f\n",L,maior_cluster/redes);
-    fclose(file);
+        sprintf(filename, "./output/big_cluster.txt");
+        file = fopen(filename,"a");
+        fprintf(file,"%d %f\n",L,maior_cluster/redes);
+        fclose(file);
+        printf("Foi : %d\n",L);
+
+    }
 }
